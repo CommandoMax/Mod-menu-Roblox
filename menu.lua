@@ -1,9 +1,9 @@
---==============
 --===========================================================================
---  DELTA ULTIMATE MOD MENU  v2.0   (Android / Delta)
+--  DELTA ULTIMATE MOD MENU  v2.1   (Android / Delta)
 --  Architecture respawn-safe · console · éditeur · keybinds · auto-farm
 --===========================================================================
 if getgenv().DUMM and getgenv().DUMM.Unload then pcall(getgenv().DUMM.Unload) end
+
 local Players    = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS        = game:GetService("UserInputService")
@@ -16,9 +16,11 @@ local Stats      = game:GetService("Stats")
 local Pathfind   = game:GetService("PathfindingService")
 local LP         = Players.LocalPlayer
 local G          = getfenv()
+
 local MM = {Connections={}, Objects={}, Setters={}, Config={}, Restore={}, Flags={},
             Loops={}, Binds={}, Logs={}}
 getgenv().DUMM = MM
+
 local function has(n) return type(G[n]) == "function" end
 local function bind(c) table.insert(MM.Connections, c) return c end
 local function keep(o) table.insert(MM.Objects, o) return o end
@@ -26,6 +28,7 @@ local function char() return LP and LP.Character end
 local function hum() local c = char() return c and c:FindFirstChildOfClass("Humanoid") end
 local function hrp() local c = char() return c and c:FindFirstChild("HumanoidRootPart") end
 local function cam() return workspace.CurrentCamera end
+
 --===========================================================================
 --  THÈME / UTILITAIRES UI
 --===========================================================================
@@ -40,10 +43,12 @@ local function New(cls, props, parent)
 end
 local function corner(o,r) New("UICorner",{CornerRadius=UDim.new(0,r or 6)},o) end
 local function stroke(o,c,t) New("UIStroke",{Color=c or Color3.new(0,0,0),Thickness=t or 1},o) end
+
 local parentGui = (gethui and gethui()) or game:GetService("CoreGui")
 local SG = New("ScreenGui",{Name="DeltaUltimate",ResetOnSpawn=false,IgnoreGuiInset=true,
     ZIndexBehavior=Enum.ZIndexBehavior.Sibling,DisplayOrder=999,Parent=parentGui})
 keep(SG)
+
 local NotifHolder = New("Frame",{Size=UDim2.new(1,0,0,320),Position=UDim2.new(0,0,0,6),
     BackgroundTransparency=1,Parent=SG})
 New("UIListLayout",{Padding=UDim.new(0,4),HorizontalAlignment=Enum.HorizontalAlignment.Center,
@@ -61,6 +66,7 @@ local function notify(title, txt, dur, col)
         task.wait(0.25); f:Destroy()
     end)
 end
+
 -- boucles nommées (pas d'accumulation de connexions)
 local function startLoop(key, event, fn)
     MM.Loops[key] = bind(RunService[event]:Connect(fn))
@@ -74,9 +80,11 @@ local function onCharacter(key, fn)
     if char() then attach(char()) end
     MM.Loops[key] = bind(LP.CharacterAdded:Connect(attach))
 end
+
 local Open = New("TextButton",{Size=UDim2.new(0,46,0,46),Position=UDim2.new(0,12,0,120),BackgroundColor3=T.acc,
     Text="Δ",TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=22,Parent=SG})
 corner(Open,23); stroke(Open,Color3.new(1,1,1),1)
+
 local Win = New("Frame",{Size=UDim2.new(0,344,0,478),Position=UDim2.new(0.5,-172,0.5,-239),
     BackgroundColor3=T.bg,Visible=false,Parent=SG})
 corner(Win,12); stroke(Win,T.acc,1)
@@ -98,21 +106,24 @@ local function draggable(frame, handle)
     end)
 end
 draggable(Win, Win)
+
 local Bar = New("Frame",{Size=UDim2.new(1,0,0,36),BackgroundColor3=T.panel,Parent=Win})
 corner(Bar,12)
 New("TextLabel",{Size=UDim2.new(1,-88,1,0),Position=UDim2.new(0,10,0,0),BackgroundTransparency=1,
-    Text="DELTA ULTIMATE v2",TextColor3=T.acc,TextXAlignment=Enum.TextXAlignment.Left,
+    Text="DELTA ULTIMATE v2.1",TextColor3=T.acc,TextXAlignment=Enum.TextXAlignment.Left,
     Font=Enum.Font.GothamBold,TextSize=12,Parent=Bar})
 local Min = New("TextButton",{Size=UDim2.new(0,28,0,22),Position=UDim2.new(1,-36,0,7),BackgroundColor3=T.elem,
     Text="–",TextColor3=T.txt,Font=Enum.Font.GothamBold,TextSize=14,Parent=Bar})
 corner(Min,6)
 Min.MouseButton1Click:Connect(function() Win.Visible=false; Open.Visible=true end)
+
 local TabBar = New("ScrollingFrame",{Size=UDim2.new(1,0,0,30),Position=UDim2.new(0,0,0,38),BackgroundTransparency=1,
     BorderSizePixel=0,ScrollBarThickness=0,ScrollingDirection=Enum.ScrollingDirection.X,
     CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.X,Parent=Win})
 New("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,Padding=UDim.new(0,4),
     VerticalAlignment=Enum.VerticalAlignment.Center,SortOrder=Enum.SortOrder.LayoutOrder},TabBar)
 New("UIPadding",{PaddingLeft=UDim.new(0,8)},TabBar)
+
 local Content = New("Frame",{Size=UDim2.new(1,-14,1,-78),Position=UDim2.new(0,7,0,72),
     BackgroundTransparency=1,Parent=Win})
 local Pages, TabBtns = {}, {}
@@ -188,22 +199,22 @@ local function Slider(p, text, min, max, default, cb, key)
         Text=tostring(default),TextColor3=T.acc,TextXAlignment=Enum.TextXAlignment.Right,Font=Enum.Font.Code,TextSize=11,Parent=row})
     local bar = New("TextButton",{Size=UDim2.new(1,-20,0,10),Position=UDim2.new(0,10,0,24),BackgroundColor3=T.panel,Text="",Parent=row})
     corner(bar,5)
-    local fill = New("Frame",{Size=UDim2.new((default-min)/(max-min),0,1,0),BackgroundColor3=T.acc,Parent=bar})
+    local fill = New("Frame",{Size=UDim2.new((default - min) / (max - min),0,1,0),BackgroundColor3=T.acc,Parent=bar})
     corner(fill,5)
     local cur = default
     local function apply(v, silent)
         cur = math.clamp(v, min, max)
-        fill.Size = UDim2.new((cur-min)/(max-min),0,1,0)
-        val.Text = tostring(math.floor(cur100)/100)
+        fill.Size = UDim2.new((cur - min) / (max - min),0,1,0)
+        val.Text = tostring(math.floor(cur * 100) / 100)
         if key then MM.Config[key] = cur end
         if not silent then pcall(cb, cur) end
     end
     bar.InputBegan:Connect(function(i)
         if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
-            apply(min + ((i.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X)(max-min))
+            apply(min + ((i.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X) * (max - min))
             local c = UIS.InputChanged:Connect(function(m)
                 if m.UserInputType==Enum.UserInputType.Touch or m.UserInputType==Enum.UserInputType.MouseMovement then
-                    apply(min + ((m.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X)(max-min))
+                    apply(min + ((m.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X) * (max - min))
                 end
             end)
             UIS.InputEnded:Connect(function(m)
@@ -235,7 +246,10 @@ local function Dropdown(p, text, options, cb)
     local list = New("Frame",{Size=UDim2.new(1,0,0,0),BackgroundColor3=T.panel,Visible=false,Parent=row})
     New("UIListLayout",{Padding=UDim.new(0,2),SortOrder=Enum.SortOrder.LayoutOrder},list)
     local op = false
-    local function rf() list.Size = UDim2.new(1,0,0,op and (#options22) or 0); list.Position = UDim2.new(0,0,0,32) end
+    local function rf()
+        list.Size = UDim2.new(1,0,0, op and (#options * 22) or 0)
+        list.Position = UDim2.new(0,0,0,32)
+    end
     btn.MouseButton1Click:Connect(function() op = not op; list.Visible = op; rf() end)
     for _, o in ipairs(options) do
         local b = New("TextButton",{Size=UDim2.new(1,0,0,20),BackgroundTransparency=1,Text=o,TextColor3=T.txt,
@@ -246,6 +260,7 @@ local function Dropdown(p, text, options, cb)
     end
     return btn
 end
+
 --===========================================================================
 --  CONSOLE
 --===========================================================================
@@ -271,6 +286,7 @@ end))
 Button(PC, "Vider", function()
     for _, c in ipairs(logScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
 end)
+
 Section(PC, "Éditeur de script")
 local ed = Box(PC, "-- code Luau…", "", nil, true)
 Button(PC, "Exécuter le code", function()
@@ -291,24 +307,25 @@ Button(PC, "Exécuter un fichier local", function()
         end
     end
 end)
+
 --===========================================================================
 --  EXPLORER
 --===========================================================================
 local PE = Tab("Explorer")
 local Selected = nil
 Section(PE, "Arbre")
-local filter = Box(PE, "filtrer nom / classe…", "", function(v) MM.Flags.filter = v:lower() end)
 local tree = New("ScrollingFrame",{Size=UDim2.new(1,0,0,170),BackgroundColor3=T.panel,BorderSizePixel=0,
     ScrollBarThickness=3,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,Parent=PE})
 New("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder},tree)
 New("UIPadding",{PaddingLeft=UDim.new(0,4),PaddingTop=UDim.new(0,3)},tree)
+
 local function buildNode(parent, inst, depth)
     local node = New("Frame",{Size=UDim2.new(1,0,0,19),BackgroundTransparency=1,
         AutomaticSize=Enum.AutomaticSize.Y,Parent=parent})
     local row = New("TextButton",{Size=UDim2.new(1,0,0,19),BackgroundTransparency=1,Text="",Parent=node})
-    local arrow = New("TextButton",{Size=UDim2.new(0,14,1,0),Position=UDim2.new(0,depth8,0,0),BackgroundTransparency=1,
+    local arrow = New("TextButton",{Size=UDim2.new(0,14,1,0),Position=UDim2.new(0, depth * 8, 0, 0),BackgroundTransparency=1,
         Text="+",TextColor3=T.dim,TextSize=11,Font=Enum.Font.GothamBold,Parent=row})
-    New("TextLabel",{Size=UDim2.new(1,-19-depth8,1,0),Position=UDim2.new(0,19+depth*8,0,0),BackgroundTransparency=1,
+    New("TextLabel",{Size=UDim2.new(1, -19 - depth * 8, 1, 0),Position=UDim2.new(0, 19 + depth * 8, 0, 0),BackgroundTransparency=1,
         Text=inst.Name.." ["..inst.ClassName.."]",TextColor3=T.txt,TextXAlignment=Enum.TextXAlignment.Left,
         TextSize=9,Font=Enum.Font.Code,TextTruncate=Enum.TextTruncate.AtEnd,Parent=row})
     local holder = New("Frame",{Size=UDim2.new(1,0,0,0),BackgroundTransparency=1,
@@ -319,10 +336,13 @@ local function buildNode(parent, inst, depth)
         if built then holder.Visible = not holder.Visible; arrow.Text = holder.Visible and "-" or "+"; return end
         built = true; arrow.Text = "-"
         task.spawn(function()
+            local f = MM.Flags.filter or ""
             local n = 0
             for _, ch in ipairs(inst:GetChildren()) do
-                n = n+1; if n > 300 then break end
-                buildNode(holder, ch, depth+1)
+                n = n + 1; if n > 300 then break end
+                if f == "" or ch.Name:lower():find(f, 1, true) or ch.ClassName:lower():find(f, 1, true) then
+                    buildNode(holder, ch, depth + 1)
+                end
             end
         end)
     end)
@@ -333,8 +353,12 @@ local function rebuild()
     for _, c in ipairs(tree:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
     for _, r in ipairs(ROOTS()) do buildNode(tree, r, 0) end
 end
+local filter = Box(PE, "filtrer nom / classe…", "", function(v)
+    MM.Flags.filter = v:lower(); rebuild()
+end)
 rebuild()
 Button(PE, "Rafraîchir", rebuild)
+
 Section(PE, "Propriétés de la sélection")
 local propFilter = Box(PE, "filtrer les propriétés…", "", nil)
 local propScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,140),BackgroundColor3=T.panel,BorderSizePixel=0,
@@ -348,7 +372,7 @@ Button(PE, "Lister les propriétés", function()
     local n = 0
     for _, name in ipairs(getproperties(Selected)) do
         if f == "" or name:lower():find(f, 1, true) then
-            n = n+1; if n > 120 then break end
+            n = n + 1; if n > 120 then break end
             local row = New("Frame",{Size=UDim2.new(1,0,0,24),BackgroundColor3=T.elem,Parent=propScroll})
             corner(row,4)
             New("TextLabel",{Size=UDim2.new(0.42,0,1,0),BackgroundTransparency=1,Text=name,TextColor3=T.dim,
@@ -369,6 +393,7 @@ Button(PE, "Lister les propriétés", function()
     end
     notify("Propriétés", n.." affichée(s)", 2)
 end)
+
 Section(PE, "Actions sur l'instance")
 Button(PE, "Copier le chemin", function()
     if Selected then setclipboard(Selected:GetFullName()); notify("Copié", Selected:GetFullName(), 2) end
@@ -386,11 +411,15 @@ end, T.bad)
 Button(PE, "Décompiler (scripts)", function()
     if not Selected or not Selected:IsA("LuaSourceContainer") then return notify("Info","pas un script",2,T.warn) end
     local src = "-- indisponible"
-    if has("decompile") then local ok, r = pcall(decompile, Selected); if ok and r then src = r end
-    elseif has("getscriptbytecode") then local ok, r = pcall(getscriptbytecode, Selected); if ok then src = tostring(r) end end
+    if has("decompile") then
+        local ok, r = pcall(decompile, Selected); if ok and r then src = r end
+    elseif has("getscriptbytecode") then
+        local ok, r = pcall(getscriptbytecode, Selected); if ok then src = tostring(r) end
+    end
     setclipboard(src)
     log("source de "..Selected.Name.." ("..#src.." o) copiée", T.ok)
 end)
+
 Section(PE, "Remote Spy")
 local spyScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,160),BackgroundColor3=T.panel,BorderSizePixel=0,
     ScrollBarThickness=3,CanvasSize=UDim2.new(0,0,0,0),Parent=PE})
@@ -420,7 +449,7 @@ if has("hookmetamethod") then
                 local o = {}
                 for i=1,a.n do o[i] = ser(a[i]) end
                 table.insert(spyQ, {n=self:GetFullName(), m=m, a=table.concat(o,", "), o=self})
-                if #spyQ > 100 then table.remove(spyQ) end
+                if #spyQ > 100 then table.remove(spyQ, 1) end
             end
         end
         return oldNamecall(self, ...)
@@ -448,6 +477,7 @@ Button(PE, "Dump de place (saveinstance)", function()
     if not has("saveinstance") then return log("saveinstance absent", T.bad) end
     pcall(saveinstance, {}); notify("Dump", "généré")
 end)
+
 --===========================================================================
 --  VM / HOOKING
 --===========================================================================
@@ -459,13 +489,15 @@ end)
 Button(PV, "Identité 2 (normal)", function()
     if has("setthreadidentity") then pcall(setthreadidentity, 2); log("identité 2", T.ok) end
 end)
+
 Section(PV, "Hook de métaméthode")
 local mmKind = Dropdown(PV, "Métaméthode", {"__namecall","__index","__newindex"}, function() end)
 local mmTarget = Box(PV, "méthode / propriété ciblée", "", nil)
 local mmRet = Box(PV, "valeur retournée (Lua)", "true", nil)
 local mmActive = {}
 local function dropMM(k)
-    if mmActive[k] then mmActivek; mmActive[k] = nil; return true end
+    local f = mmActive[k]
+    if f then f(); mmActive[k] = nil; return true end
 end
 Button(PV, "Installer", function()
     local k = mmKind.Text
@@ -494,6 +526,7 @@ Button(PV, "Installer", function()
     notify("Hook", k.." "..mmTarget.Text, 2, T.ok)
 end)
 Button(PV, "Retirer", function() notify("Hook", dropMM(mmKind.Text) and "retiré" or "inactif", 2, T.warn) end)
+
 Section(PV, "Presets")
 Button(PV, "Anti-Kick", function()
     local old
@@ -518,8 +551,9 @@ Button(PV, "Spoof WalkSpeed (lecture)", function()
     table.insert(MM.Restore, function() pcall(hookmetamethod, game, "__index", old) end)
     notify("Spoof", "WalkSpeed verrouillé sur 16", 2, T.ok)
 end)
+
 Section(PV, "GC / Upvalues / Constantes")
-local gcList, gcTarget = {}, nil
+local gcTarget = nil
 local gcScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,130),BackgroundColor3=T.panel,BorderSizePixel=0,
     ScrollBarThickness=3,CanvasSize=UDim2.new(0,0,0,0),Parent=PV})
 New("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder},gcScroll)
@@ -552,7 +586,7 @@ Button(PV, "Scanner getgc", function()
     local n = 0
     for _, v in ipairs(getgc(true)) do
         if type(v) == "function" then
-            n = n+1; if n > 120 then break end
+            n = n + 1; if n > 120 then break end
             local nm = "?"
             pcall(function() nm = debug.info(v, "n") or "?" end)
             local b = New("TextButton",{Size=UDim2.new(1,0,0,19),BackgroundColor3=T.elem,Text="fn "..nm,TextColor3=T.txt,
@@ -564,17 +598,19 @@ Button(PV, "Scanner getgc", function()
 end)
 Button(PV, "Espionner la fonction (calls)", function()
     if not gcTarget then return log("sélectionne une fonction", T.warn) end
+    local target = gcTarget
     local old
-    old = hookfunction(gcTarget, function(...)
+    old = hookfunction(target, function(...)
         local a = table.pack(...)
         local o = {}
-        for i=1,math.min(a.n,5) do o[i] = ser(a[i]) end
+        for i = 1, math.min(a.n, 5) do o[i] = ser(a[i]) end
         log("call: "..table.concat(o, ", "))
         return old(...)
     end)
-    table.insert(MM.Restore, function() pcall(hookfunction, old and gcTarget or gcTarget, old) end)
+    table.insert(MM.Restore, function() pcall(hookfunction, target, old) end)
     log("spy actif", T.ok)
 end)
+
 Section(PV, "Connexions de signaux")
 local sigName = Box(PV, "évènement (Changed, AncestryChanged…)", "", nil)
 Button(PV, "Lister les connexions", function()
@@ -602,6 +638,7 @@ Button(PV, "Lister les connexions", function()
     end
     log(#list.." connexions", T.ok)
 end)
+
 --===========================================================================
 --  MONDE / RÉSEAU
 --===========================================================================
@@ -611,7 +648,7 @@ Button(PW, "Revendiquer toutes les pièces libres", function()
     local n = 0
     for _, v in ipairs(workspace:GetDescendants()) do
         if v:IsA("BasePart") and not v.Anchored then
-            if pcall(function() v:SetNetworkOwner(LP) end) then n = n+1 end
+            if pcall(function() v:SetNetworkOwner(LP) end) then n = n + 1 end
         end
     end
     notify("Réseau", n.." pièces", 2, T.ok)
@@ -622,6 +659,7 @@ Slider(PW, "Rayon de simulation", 100, 10000, 1000, function(v)
         LP.MaximumSimulationRadius = v; LP.SimulationRadius = v
     end)
 end, "simRadius")
+
 Section(PW, "Désync")
 local dOff = Vector3.new(0,8,0)
 Toggle(PW, "Désync (hitbox décalée)", false, function(on)
@@ -633,6 +671,7 @@ Toggle(PW, "Désync (hitbox décalée)", false, function(on)
     else stopLoop("desync") end
 end, "desync")
 Slider(PW, "Décalage Y", 0, 40, 8, function(v) dOff = Vector3.new(0,v,0) end, "desyncY")
+
 Section(PW, "Interactions à distance")
 local function nearest(class)
     local r = hrp(); if not r then return nil end
@@ -653,7 +692,9 @@ end
 Button(PW, "Touch le plus proche", function()
     if not has("firetouchinterest") then return log("absent", T.bad) end
     local r = hrp(); local t = nearest("BasePart")
-    if r and t then firetouchinterest(r, t, 0); task.wait(0.05); firetouchinterest(r, t, 1); log(t:GetFullName(), T.ok) end
+    if r and t then
+        firetouchinterest(r, t, 0); task.wait(0.05); firetouchinterest(r, t, 1); log(t:GetFullName(), T.ok)
+    end
 end)
 Button(PW, "Click le plus proche", function()
     if not has("fireclickdetector") then return log("absent", T.bad) end
@@ -672,11 +713,12 @@ Button(PW, "Tous les prompts dans 60 studs", function()
     for _, v in ipairs(workspace:GetDescendants()) do
         if v:IsA("ProximityPrompt") and v.Parent and v.Parent:IsA("BasePart")
             and (v.Parent.Position - r.Position).Magnitude < 60 then
-            pcall(fireproximityprompt, v); n = n+1
+            pcall(fireproximityprompt, v); n = n + 1
         end
     end
     notify("Prompts", n.." déclenchés", 2, T.ok)
 end)
+
 Section(PW, "Physique")
 Button(PW, "Attirer les pièces libres proches", function()
     local r = hrp(); if not r then return end
@@ -685,7 +727,7 @@ Button(PW, "Attirer les pièces libres proches", function()
         if v:IsA("BasePart") and not v.Anchored and (v.Position - r.Position).Magnitude < 100 then
             pcall(function() v:SetNetworkOwner(LP) end)
             pcall(function() v.CFrame = r.CFrame * CFrame.new(math.random(-6,6), 4, math.random(-6,6)) end)
-            n = n+1
+            n = n + 1
         end
     end
     notify("Bring", n.." pièces", 2, T.ok)
@@ -700,7 +742,9 @@ Toggle(PW, "Orbit (pièces autour de moi)", false, function(on)
                 if v:IsA("BasePart") and not v.Anchored and (v.Position - r.Position).Magnitude < 80 then
                     i = i + 1
                     local a = os.clock() * 1.5 + i
-                    pcall(function() v.CFrame = r.CFrame * CFrame.new(math.cos(a)*8, 3, math.sin(a)*8) end)
+                    pcall(function()
+                        v.CFrame = r.CFrame * CFrame.new(math.cos(a) * 8, 3, math.sin(a) * 8)
+                    end)
                 end
             end
         end)
@@ -708,6 +752,7 @@ Toggle(PW, "Orbit (pièces autour de moi)", false, function(on)
 end, "orbit")
 Slider(PW, "Gravité", 0, 400, 196, function(v) workspace.Gravity = v end, "gravity")
 Slider(PW, "Heure du jour", 0, 24, 14, function(v) Lighting.ClockTime = v end, "clocktime")
+
 Section(PW, "Waypoints & Auto-Farm")
 local wps = {}
 local wpScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,80),BackgroundColor3=T.panel,BorderSizePixel=0,
@@ -729,7 +774,7 @@ Toggle(PW, "Parcours tween", false, function(on)
     if on then
         startLoop("walk", "Heartbeat", function()
             if #wps == 0 then return end
-            MM.Flags.walkIdx = (MM.Flags.walkIdx or 0) % #wps + 1
+            MM.Flags.walkIdx = ((MM.Flags.walkIdx or 0) % #wps) + 1
             local r = hrp()
             if r then pcall(function() r.CFrame = r.CFrame:Lerp(wps[MM.Flags.walkIdx], 0.08) end) end
         end)
@@ -748,7 +793,9 @@ Toggle(PW, "Auto-Farm (pathfinding + prompts)", false, function(on)
                 if ok and path.Status == Enum.PathStatus.Success then
                     for _, wp in ipairs(path:GetWaypoints()) do
                         if not MM.Flags.farm then break end
-                        if wp.Action == Enum.PathWaypointAction.Jump then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+                        if wp.Action == Enum.PathWaypointAction.Jump then
+                            h:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
                         h:MoveTo(wp.Position)
                         local t = 0
                         while MM.Flags.farm and t < 3 do
@@ -770,6 +817,7 @@ Toggle(PW, "Auto-Farm (pathfinding + prompts)", false, function(on)
         end
     end)
 end, "farm")
+
 --===========================================================================
 --  COMBAT
 --===========================================================================
@@ -792,14 +840,14 @@ local function getTarget()
                 local p = part.Position + part.AssemblyLinearVelocity * aim.pred
                 local sp, vis = c:WorldToViewportPoint(p)
                 if vis and sp.Z > 0 then
-                    local d = (Vector2.new(sp.X, sp.Y) - c.ViewportSize/2).Magnitude
+                    local d = (Vector2.new(sp.X, sp.Y) - c.ViewportSize / 2).Magnitude
                     if d <= aim.fov then
                         local okVis = true
                         if aim.walls then
                             local params = RaycastParams.new()
                             params.FilterDescendantsInstances = {char(), ch}
                             params.FilterType = Enum.RaycastFilterType.Exclude
-                            local hit = workspace:Raycast(c.CFrame.Position, (p - c.CFrame.Position), params)
+                            local hit = workspace:Raycast(c.CFrame.Position, p - c.CFrame.Position, params)
                             okVis = (hit == nil)
                         end
                         if okVis then
@@ -817,7 +865,8 @@ bind(RunService.RenderStepped:Connect(function()
     if fovC then
         fovC.Visible = aim.on
         if aim.on then
-            fovC.Position = cam().ViewportSize/2; fovC.Radius = aim.fov
+            fovC.Position = cam().ViewportSize / 2
+            fovC.Radius = aim.fov
         end
     end
     if not aim.on then return end
@@ -835,6 +884,7 @@ Slider(PX, "Prédiction", 0, 1, 0, function(v) aim.pred = v end, "aimPred")
 Dropdown(PX, "Partie", {"Head","HumanoidRootPart","UpperTorso","Torso"}, function(v) aim.part = v end)
 Toggle(PX, "Vérif. équipe", false, function(v) aim.team = v end, "aimTeam")
 Toggle(PX, "Ligne de vue (anti-mur)", false, function(v) aim.walls = v end, "aimWalls")
+
 Section(PX, "Silent Aim")
 local silent = false
 if has("hookmetamethod") then
@@ -844,14 +894,20 @@ if has("hookmetamethod") then
             if t then
                 if key == "Hit" then return CFrame.new(t.pos) end
                 if key == "Target" then return t.part end
-                if key == "UnitRay" then return Ray.new(cam().CFrame.Position, (t.pos - cam().CFrame.Position).Unit) end
+                if key == "UnitRay" then
+                    return Ray.new(cam().CFrame.Position, (t.pos - cam().CFrame.Position).Unit)
+                end
             end
         end
         return old(self, key)
     end)
     table.insert(MM.Restore, function() pcall(hookmetamethod, game, "__index", old) end)
 end
-Toggle(PX, "Activer", false, function(v) silent = v; notify("Silent Aim", v and "ON" or "OFF", 2, v and T.ok or T.warn) end, "silent")
+Toggle(PX, "Activer", false, function(v)
+    silent = v
+    notify("Silent Aim", v and "ON" or "OFF", 2, v and T.ok or T.warn)
+end, "silent")
+
 Section(PX, "TriggerBot / Hitbox / Vitesse d'attaque")
 Toggle(PX, "TriggerBot", false, function(v)
     MM.Flags.trigger = v
@@ -865,6 +921,7 @@ Toggle(PX, "TriggerBot", false, function(v)
         end)
     else stopLoop("trigger") end
 end, "trigger")
+
 local hbSize = 12
 local hbOrig = {}
 Toggle(PX, "Hitbox Expander", false, function(on)
@@ -890,6 +947,7 @@ Toggle(PX, "Hitbox Expander", false, function(on)
     end
 end, "hitbox")
 Slider(PX, "Taille hitbox", 4, 40, 12, function(v) hbSize = v end, "hitboxSize")
+
 Toggle(PX, "Fast Attack", false, function(on)
     MM.Flags.fast = on
     if on then
@@ -902,6 +960,7 @@ Toggle(PX, "Fast Attack", false, function(on)
         end)
     else stopLoop("fast") end
 end, "fastAttack")
+
 --===========================================================================
 --  VISUELS
 --===========================================================================
@@ -949,7 +1008,7 @@ if Drawing then
                     if esp.box then
                         local b = mk(pl,"box","Square")
                         b.Visible = vis; b.Size = Vector2.new(wid,hgt)
-                        b.Position = Vector2.new(hp.X-wid/2, hp.Y); b.Color = col
+                        b.Position = Vector2.new(hp.X - wid / 2, hp.Y); b.Color = col
                     end
                     if esp.dot then
                         local d = mk(pl,"dot","Circle")
@@ -957,25 +1016,25 @@ if Drawing then
                     end
                     if esp.name then
                         local t = mk(pl,"name","Text")
-                        t.Visible = vis; t.Text = pl.Name; t.Position = Vector2.new(hp.X, hp.Y-14)
+                        t.Visible = vis; t.Text = pl.Name; t.Position = Vector2.new(hp.X, hp.Y - 14)
                         t.Center = true; t.Size = 13; t.Color = col; t.Outline = true
                     end
                     if esp.dist and myPos then
                         local t = mk(pl,"dist","Text")
-                        t.Visible = vis; t.Text = math.floor((root.Position-myPos).Magnitude).."m"
-                        t.Position = Vector2.new(hp.X, fp.Y+2); t.Center = true; t.Size = 12
+                        t.Visible = vis; t.Text = math.floor((root.Position - myPos).Magnitude).."m"
+                        t.Position = Vector2.new(hp.X, fp.Y + 2); t.Center = true; t.Size = 12
                         t.Color = Color3.new(1,1,1); t.Outline = true
                     end
                     if esp.health then
                         local bar = mk(pl,"hp","Square")
                         bar.Visible = vis; bar.Filled = true; bar.Color = Color3.fromRGB(70,220,110)
-                        local ratio = h.Health / math.max(h.MaxHealth,1)
-                        bar.Size = Vector2.new(3, hgtratio)
-                        bar.Position = Vector2.new(hp.X-wid/2-6, fp.Y-hgtratio)
+                        local ratio = h.Health / math.max(h.MaxHealth, 1)
+                        bar.Size = Vector2.new(3, hgt * ratio)
+                        bar.Position = Vector2.new(hp.X - wid / 2 - 6, fp.Y - hgt * ratio)
                     end
                     if esp.tracer then
                         local l = mk(pl,"tracer","Line")
-                        l.Visible = vis; l.From = Vector2.new(c.ViewportSize.X/2, c.ViewportSize.Y)
+                        l.Visible = vis; l.From = Vector2.new(c.ViewportSize.X / 2, c.ViewportSize.Y)
                         l.To = Vector2.new(hp.X, fp.Y); l.Color = col
                     end
                     if esp.skel then
@@ -1019,6 +1078,7 @@ Toggle(PV2, "Noms", false, function(v) esp.name = v end, "espName")
 Toggle(PV2, "Distance", false, function(v) esp.dist = v end, "espDist")
 Toggle(PV2, "Head dots", false, function(v) esp.dot = v end, "espDot")
 Toggle(PV2, "Chams", false, function(v) esp.chams = v end, "espChams")
+
 Section(PV2, "ESP objets / PNJ")
 Toggle(PV2, "Activer", false, function(on)
     MM.Flags.item = on
@@ -1035,7 +1095,8 @@ Toggle(PV2, "Activer", false, function(on)
                     local match = v:IsA("ProximityPrompt") or (v:IsA("BasePart")
                         and (nm:find("chest") or nm:find("coin") or nm:find("item") or nm:find("crate") or nm:find("npc")))
                     if match then
-                        local p = v:IsA("BasePart") and v.Position or (v.Parent and v.Parent:IsA("BasePart") and v.Parent.Position)
+                        local p = v:IsA("BasePart") and v.Position
+                            or (v.Parent and v.Parent:IsA("BasePart") and v.Parent.Position)
                         if p then
                             local sp, vis = c:WorldToViewportPoint(p)
                             if vis and sp.Z > 0 then
@@ -1055,6 +1116,7 @@ Toggle(PV2, "Activer", false, function(on)
         end)
     end
 end, "itemEsp")
+
 Section(PV2, "Freecam")
 local fc = {on=false, speed=60, cf=nil, yaw=0, pitch=0}
 Toggle(PV2, "Activer", false, function(on)
@@ -1075,7 +1137,7 @@ Toggle(PV2, "Activer", false, function(on)
             local rot = CFrame.fromEulerAnglesYXZ(fc.pitch, fc.yaw, 0)
             local h = hum()
             local dir = h and rot:VectorToWorldSpace(h.MoveDirection) or Vector3.zero
-            fc.cf = CFrame.new(fc.cf.Position + dir * fc.speed/60) * rot
+            fc.cf = CFrame.new(fc.cf.Position + dir * (fc.speed / 60)) * rot
             cam().CFrame = fc.cf
         end)
     else
@@ -1084,16 +1146,26 @@ Toggle(PV2, "Activer", false, function(on)
     end
 end, "freecam")
 Slider(PV2, "Vitesse", 10, 300, 60, function(v) fc.speed = v end, "freecamSpeed")
+
 Section(PV2, "Monde")
 local lSave
 Toggle(PV2, "Fullbright", false, function(on)
     if on then
-        lSave = {Lighting.Brightness, Lighting.Ambient, Lighting.OutdoorAmbient, Lighting.ClockTime, Lighting.GlobalShadows, Lighting.FogEnd}
-        Lighting.Brightness = 3; Lighting.Ambient = Color3.new(1,1,1); Lighting.OutdoorAmbient = Color3.new(1,1,1)
-        Lighting.ClockTime = 12; Lighting.GlobalShadows = false; Lighting.FogEnd = 1e6
+        lSave = {Lighting.Brightness, Lighting.Ambient, Lighting.OutdoorAmbient, Lighting.ClockTime,
+                 Lighting.GlobalShadows, Lighting.FogEnd}
+        Lighting.Brightness = 3
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+        Lighting.ClockTime = 12
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 1e6
     elseif lSave then
-        Lighting.Brightness, Lighting.Ambient, Lighting.OutdoorAmbient, Lighting.ClockTime, Lighting.GlobalShadows, Lighting.FogEnd =
-            lSave[1], lSave[2], lSave[3], lSave[4], lSave[5], lSave[6]
+        Lighting.Brightness = lSave[1]
+        Lighting.Ambient = lSave[2]
+        Lighting.OutdoorAmbient = lSave[3]
+        Lighting.ClockTime = lSave[4]
+        Lighting.GlobalShadows = lSave[5]
+        Lighting.FogEnd = lSave[6]
     end
 end, "fullbright")
 Toggle(PV2, "No Fog", false, function(on) Lighting.FogEnd = on and 1e6 or 1000 end, "nofog")
@@ -1124,40 +1196,48 @@ Toggle(PV2, "Crosshair", false, function(on)
     if on then
         startLoop("cross", "RenderStepped", function()
             local vs = cam().ViewportSize
-            ch1.From = Vector2.new(vs.X/2-8, vs.Y/2); ch1.To = Vector2.new(vs.X/2+8, vs.Y/2)
-            ch2.From = Vector2.new(vs.X/2, vs.Y/2-8); ch2.To = Vector2.new(vs.X/2, vs.Y/2+8)
+            ch1.From = Vector2.new(vs.X / 2 - 8, vs.Y / 2); ch1.To = Vector2.new(vs.X / 2 + 8, vs.Y / 2)
+            ch2.From = Vector2.new(vs.X / 2, vs.Y / 2 - 8); ch2.To = Vector2.new(vs.X / 2, vs.Y / 2 + 8)
         end)
     else stopLoop("cross") end
 end, "crosshair")
+
 Section(PV2, "HUD de stats")
-local hudOn = false
 local hud = Drawing and Drawing.new("Text")
 if hud then
     hud.Size = 13; hud.Color = Color3.new(1,1,1); hud.Outline = true
     hud.Position = Vector2.new(10, 10); hud.Visible = false
 end
 Toggle(PV2, "Afficher FPS / ping / position", false, function(on)
-    hudOn = on
     if not hud then return end
     hud.Visible = on
     if on then
-        startLoop("hud", "Heartbeat", function()
-            local fps = math.floor(1/math.max(RunService.RenderStepped:Wait(), 1e-4))
-            local ping = "?"
-            pcall(function() ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
-            local r = hrp()
-            local pos = r and string.format("%.0f %.0f %.0f", r.Position.X, r.Position.Y, r.Position.Z) or "?"
-            hud.Text = string.format("FPS %d | Ping %s | %s", fps, ping, pos)
+        local frames, last = 0, os.clock()
+        startLoop("hud", "RenderStepped", function()
+            frames = frames + 1
+            local now = os.clock()
+            if now - last >= 0.5 then
+                local fps = math.floor(frames / (now - last))
+                frames, last = 0, now
+                local ping = "?"
+                pcall(function() ping = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+                local r = hrp()
+                local pos = r and string.format("%.0f %.0f %.0f", r.Position.X, r.Position.Y, r.Position.Z) or "?"
+                hud.Text = string.format("FPS %d | Ping %s | %s", fps, ping, pos)
+            end
         end)
     else stopLoop("hud") end
 end, "hud")
+
 --===========================================================================
 --  MOUVEMENT
 --===========================================================================
 local PM = Tab("Mouvement")
 Section(PM, "Base")
 Slider(PM, "WalkSpeed", 8, 500, 16, function(v) local h = hum(); if h then h.WalkSpeed = v end end, "walkSpeed")
-Slider(PM, "JumpPower", 20, 500, 50, function(v) local h = hum(); if h then h.UseJumpPower = true; h.JumpPower = v end end, "jumpPower")
+Slider(PM, "JumpPower", 20, 500, 50, function(v)
+    local h = hum(); if h then h.UseJumpPower = true; h.JumpPower = v end
+end, "jumpPower")
 onCharacter("speedApply", function()
     task.wait(1)
     local h = hum()
@@ -1169,10 +1249,13 @@ Toggle(PM, "Bhop", false, function(on)
     if on then
         startLoop("bhop", "Heartbeat", function()
             local h = hum()
-            if h and h:GetState() ~= Enum.HumanoidStateType.Jumping then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+            if h and h:GetState() ~= Enum.HumanoidStateType.Jumping then
+                h:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end)
     else stopLoop("bhop") end
 end, "bhop")
+
 Section(PM, "Vol")
 local fly = {on=false, speed=60, up=0}
 local flyVel
@@ -1199,6 +1282,7 @@ end, "fly")
 Slider(PM, "Vitesse vol", 10, 400, 60, function(v) fly.speed = v end, "flySpeed")
 Button(PM, "Monter", function() fly.up = 1; task.delay(0.7, function() fly.up = 0 end) end)
 Button(PM, "Descendre", function() fly.up = -1; task.delay(0.7, function() fly.up = 0 end) end)
+
 Section(PM, "Collisions")
 Toggle(PM, "NoClip", false, function(on)
     MM.Flags.noclip = on
@@ -1236,7 +1320,9 @@ Toggle(PM, "AirWalk", false, function(on)
                     plat.Transparency = 0.6; plat.CanCollide = true; plat.Parent = workspace
                 end
                 plat.CFrame = r.CFrame * CFrame.new(0,-3.2,0)
-            elseif plat then plat:Destroy(); plat = nil end
+            elseif plat then
+                plat:Destroy(); plat = nil
+            end
         end)
     else
         stopLoop("airwalk")
@@ -1255,6 +1341,7 @@ Toggle(PM, "Spider", false, function(on)
         end)
     else stopLoop("spider") end
 end, "spider")
+
 Section(PM, "Stabilité")
 Toggle(PM, "Fling", false, function(on)
     MM.Flags.fling = on
@@ -1311,6 +1398,7 @@ Toggle(PM, "Anti-Void", false, function(on)
         end)
     else stopLoop("antivoid") end
 end, "antivoid")
+
 --===========================================================================
 --  OUTILS
 --===========================================================================
@@ -1322,8 +1410,12 @@ Button(PO, "Soigner (MaxHealth)", function()
 end)
 Button(PO, "Régénérer", function() local h = hum(); if h then h.Health = 0 end end)
 Slider(PO, "Échelle du modèle", 0.5, 4, 1, function(v)
-    local h = hum(); if h then h.BodyDepthScale = v; h.BodyWidthScale = v; h.BodyHeightScale = v; h.HeadScale = v end
+    local h = hum()
+    if h then
+        h.BodyDepthScale = v; h.BodyWidthScale = v; h.BodyHeightScale = v; h.HeadScale = v
+    end
 end, "scale")
+
 Section(PO, "Téléportation")
 local tpMode = false
 Toggle(PO, "Outil TP (tap sur la carte)", false, function(on)
@@ -1342,6 +1434,7 @@ Toggle(PO, "Outil TP (tap sur la carte)", false, function(on)
         end
     end))
 end, "tpTool")
+
 Section(PO, "Joueurs")
 local plScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,150),BackgroundColor3=T.panel,BorderSizePixel=0,
     ScrollBarThickness=3,CanvasSize=UDim2.new(0,0,0,0),Parent=PO})
@@ -1367,12 +1460,16 @@ bind(task.spawn(function()
                     Text="SPEC",TextSize=7,TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,Parent=row})
                 sp.MouseButton1Click:Connect(function()
                     local r = pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
-                    if r then cam().CameraSubject = r; cam().CameraType = Enum.CameraType.Custom end
+                    if r then
+                        cam().CameraSubject = r
+                        cam().CameraType = Enum.CameraType.Custom
+                    end
                 end)
             end
         end
     end
 end))
+
 Section(PO, "Animations & sons")
 local animBox = Box(PO, "ID d'animation", "", nil)
 Button(PO, "Jouer l'animation", function()
@@ -1384,9 +1481,10 @@ end)
 local sndBox = Box(PO, "ID de son", "", nil)
 Button(PO, "Jouer le son", function()
     local s = Instance.new("Sound")
-    s.SoundId = "rbxassetid://"..sndBox.Text:gsub("%D","")
+    s.SoundId = "rbxassetid://" .. (sndBox.Text:gsub("%D",""))
     s.Volume = 2; s.Parent = workspace; s:Play()
 end)
+
 Section(PO, "Chat")
 local chatBox = Box(PO, "message", "", nil)
 local function say(m)
@@ -1403,10 +1501,14 @@ Toggle(PO, "Chat spam", false, function(on)
     spamOn = on
     if on then
         startLoop("spam", "Heartbeat", function()
-            if spamOn and chatBox.Text ~= "" then say(chatBox.Text); task.wait(2) end
+            if spamOn and chatBox.Text ~= "" then
+                say(chatBox.Text)
+                task.wait(2)
+            end
         end)
     else stopLoop("spam") end
 end, "spam")
+
 Section(PO, "Serveur & divers")
 Slider(PO, "Limite FPS", 30, 240, 60, function(v) if has("setfpscap") then pcall(setfpscap, v) end end, "fps")
 Toggle(PO, "Anti-AFK", true, function(on) MM.Flags.afk = on end, "antiafk")
@@ -1416,7 +1518,8 @@ end))
 Button(PO, "Rejoindre le serveur", function() Teleport:Teleport(game.PlaceId, LP) end)
 Button(PO, "Server Hop", function()
     local ok, res = pcall(function()
-        return Http:JSONDecode(game:HttpGet(("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)))
+        return Http:JSONDecode(game:HttpGet(
+            ("https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100"):format(game.PlaceId)))
     end)
     if ok and res and res.data then
         for _, s in ipairs(res.data) do
@@ -1431,6 +1534,7 @@ Button(PO, "Copier PlaceId / JobId", function()
     local s = ("PlaceId=%d JobId=%s"):format(game.PlaceId, game.JobId)
     setclipboard(s); notify("Copié", s, 2)
 end)
+
 --===========================================================================
 --  CONFIG / KEYBINDS
 --===========================================================================
@@ -1439,7 +1543,8 @@ Section(PK, "Keybinds (clavier)")
 local bindKey = Dropdown(PK, "Fonction", (function()
     local o = {}
     for k in next, MM.Setters do table.insert(o, k) end
-    table.sort(o); return o
+    table.sort(o)
+    return o
 end)(), function() end)
 Button(PK, "Assigner une touche", function()
     notify("Keybind", "appuie sur une touche…", 4)
@@ -1456,7 +1561,8 @@ bind(UIS.InputBegan:Connect(function(i)
     if i.UserInputType ~= Enum.UserInputType.Keyboard then return end
     if MM.Flags.binding == i.KeyCode then
         local k = bindKey.Text
-        if MM.Binds[k] then MM.Binds[k](not MM.Config[k]) end
+        local f = MM.Binds[k]
+        if f then f(not MM.Config[k]) end
     end
 end))
 Section(PK, "Sauvegarde")
@@ -1483,6 +1589,7 @@ Button(PK, "Tout désactiver", function()
     notify("Reset", "features coupées", 2, T.warn)
 end)
 Button(PK, "Décharger le menu", function() pcall(MM.Unload) end, T.bad)
+
 --===========================================================================
 --  FINALISATION
 --===========================================================================
@@ -1511,7 +1618,7 @@ TabBtns[1].TextColor3 = T.acc
 TabBtns[1].BackgroundColor3 = T.panel
 Win.Visible = true
 Open.Visible = false
--- rapport de compatibilité
+
 task.spawn(function()
     local missing = {}
     for _, n in ipairs({"hookfunction","hookmetamethod","getgc","getconnections","getproperties",
@@ -1521,5 +1628,5 @@ task.spawn(function()
     end
     log("Menu chargé — "..#Pages.." onglets", T.ok)
     if #missing > 0 then log("indisponible : "..table.concat(missing, ", "), T.warn) end
-    notify("Delta Ultimate v2", "chargé · "..#Pages.." onglets", 3, T.ok)
+    notify("Delta Ultimate v2.1", "chargé · "..#Pages.." onglets", 3, T.ok)
 end)
