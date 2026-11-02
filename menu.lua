@@ -1,6 +1,6 @@
 --===========================================================================
---  DELTA ULTIMATE MOD MENU  v2.2   (Android / Delta)
---  Câblage d'ouverture immédiat · blocs isolés · hooks protégés
+--  DELTA ULTIMATE MOD MENU  v2.3   (Android / Delta)
+--  Arbre corrigé · passthrough tactile · hooks à la demande
 --===========================================================================
 if getgenv().DUMM and getgenv().DUMM.Unload then pcall(getgenv().DUMM.Unload) end
 
@@ -33,9 +33,6 @@ local function try(name, fn)
     if not ok then table.insert(MM.Fails, name.." → "..tostring(e)) end
 end
 
---===========================================================================
---  THÈME / UI
---===========================================================================
 local T = {bg=Color3.fromRGB(15,15,19), panel=Color3.fromRGB(23,23,29), elem=Color3.fromRGB(32,32,40),
     acc=Color3.fromRGB(84,138,255), txt=Color3.fromRGB(236,236,242), dim=Color3.fromRGB(146,146,158),
     ok=Color3.fromRGB(74,200,118), bad=Color3.fromRGB(232,80,80), warn=Color3.fromRGB(240,180,70)}
@@ -90,24 +87,50 @@ local function onCharacter(key, fn)
 end
 
 --===========================================================================
---  BOUTON + FENÊTRE (câblés tout de suite)
+--  FENÊTRE + BOUTON
 --===========================================================================
 local Win = New("Frame",{Size=UDim2.new(0,344,0,478),Position=UDim2.new(0.5,-172,0.5,-239),
-    BackgroundColor3=T.bg,Visible=true,Active=true,ZIndex=10,Parent=SG})
+    BackgroundColor3=T.bg,Visible=true,Active=false,ZIndex=10,Parent=SG})
 corner(Win,12); stroke(Win,T.acc,1)
 
 local Open = New("TextButton",{Size=UDim2.new(0,46,0,46),Position=UDim2.new(0,12,0,120),BackgroundColor3=T.acc,
     Text="Δ",TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=22,Active=true,
-    Visible=false,ZIndex=40,Parent=SG})
+    Visible=true,ZIndex=40,Parent=SG})
 corner(Open,23); stroke(Open,Color3.new(1,1,1),1)
 
 local function setOpen(v)
     Win.Visible = v
     Open.Visible = not v
 end
-Open.MouseButton1Click:Connect(function() setOpen(true) end)
 
--- drag via la barre de titre uniquement
+-- bouton : glisser = déplacer, tap = ouvrir
+do
+    local input, moved, startPos, startBtn
+    Open.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.Touch or i.UserInputType==Enum.UserInputType.MouseButton1 then
+            input, moved, startPos, startBtn = i, false, i.Position, Open.Position
+        end
+    end)
+    UIS.InputChanged:Connect(function(i)
+        if input and i == input and (i.UserInputType==Enum.UserInputType.Touch
+            or i.UserInputType==Enum.UserInputType.MouseMovement) then
+            local d = i.Position - startPos
+            if not moved and d.Magnitude > 10 then moved = true end
+            if moved then
+                Open.Position = UDim2.new(startBtn.X.Scale, startBtn.X.Offset + d.X,
+                                          startBtn.Y.Scale, startBtn.Y.Offset + d.Y)
+            end
+        end
+    end)
+    UIS.InputEnded:Connect(function(i)
+        if i == input then
+            if not moved then setOpen(true) end
+            input = nil
+        end
+    end)
+end
+
+-- déplacement fenêtre via la barre de titre
 local Bar = New("Frame",{Size=UDim2.new(1,0,0,36),BackgroundColor3=T.panel,Active=true,Parent=Win})
 corner(Bar,12)
 do
@@ -130,7 +153,7 @@ do
     end)
 end
 New("TextLabel",{Size=UDim2.new(1,-88,1,0),Position=UDim2.new(0,10,0,0),BackgroundTransparency=1,
-    Text="DELTA ULTIMATE v2.2",TextColor3=T.acc,TextXAlignment=Enum.TextXAlignment.Left,
+    Text="DELTA ULTIMATE v2.3",TextColor3=T.acc,TextXAlignment=Enum.TextXAlignment.Left,
     Font=Enum.Font.GothamBold,TextSize=12,Parent=Bar})
 local Min = New("TextButton",{Size=UDim2.new(0,28,0,22),Position=UDim2.new(1,-36,0,7),BackgroundColor3=T.elem,
     Text="–",TextColor3=T.txt,Font=Enum.Font.GothamBold,TextSize=14,Active=true,Parent=Bar})
@@ -379,6 +402,8 @@ try("explorer", function()
     buildNode = function(parent, inst, depth)
         local node = New("Frame",{Size=UDim2.new(1,0,0,19),BackgroundTransparency=1,
             AutomaticSize=Enum.AutomaticSize.Y,Parent=parent})
+        New("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder},node)
+
         local row = New("TextButton",{Size=UDim2.new(1,0,0,19),BackgroundTransparency=1,Text="",Active=true,Parent=node})
         local arrow = New("TextButton",{Size=UDim2.new(0,14,1,0),Position=UDim2.new(0, depth * 8, 0, 0),
             BackgroundTransparency=1,Text="+",TextColor3=T.dim,TextSize=11,Font=Enum.Font.GothamBold,
@@ -387,8 +412,11 @@ try("explorer", function()
             Position=UDim2.new(0, 19 + depth * 8, 0, 0),BackgroundTransparency=1,
             Text=inst.Name.." ["..inst.ClassName.."]",TextColor3=T.txt,TextXAlignment=Enum.TextXAlignment.Left,
             TextSize=9,Font=Enum.Font.Code,TextTruncate=Enum.TextTruncate.AtEnd,Parent=row})
+
         local holder = New("Frame",{Size=UDim2.new(1,0,0,0),BackgroundTransparency=1,
             AutomaticSize=Enum.AutomaticSize.Y,Parent=node})
+        New("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder},holder)
+
         local built = false
         row.MouseButton1Click:Connect(function() Selected = inst; notify("Sélection", inst:GetFullName(), 2) end)
         arrow.MouseButton1Click:Connect(function()
@@ -402,6 +430,11 @@ try("explorer", function()
                     if f == "" or ch.Name:lower():find(f, 1, true) or ch.ClassName:lower():find(f, 1, true) then
                         buildNode(holder, ch, depth + 1)
                     end
+                end
+                if #holder:GetChildren() == 1 then
+                    New("TextLabel",{Size=UDim2.new(1,0,0,16),BackgroundTransparency=1,
+                        Text="  (vide)",TextColor3=T.dim,TextSize=9,Font=Enum.Font.Code,
+                        TextXAlignment=Enum.TextXAlignment.Left,Parent=holder})
                 end
             end)
         end)
@@ -479,31 +512,38 @@ try("explorer", function()
         log("source copiée ("..#src.." o)", T.ok)
     end)
 
-    Section(PE, "Remote Spy")
+    Section(PE, "Remote Spy (hook à la demande)")
     local spyScroll = New("ScrollingFrame",{Size=UDim2.new(1,0,0,150),BackgroundColor3=T.panel,BorderSizePixel=0,
         ScrollBarThickness=3,CanvasSize=UDim2.new(0,0,0,0),Parent=PE})
     New("UIListLayout",{SortOrder=Enum.SortOrder.LayoutOrder},spyScroll)
     local spyQ = {}
-    if has("hookmetamethod") then
-        try("remote spy hook", function()
-            local old
-            old = hookmetamethod(game, "__namecall", function(self, ...)
-                local m = getnamecallmethod()
-                if not checkcaller() and (m=="FireServer" or m=="InvokeServer" or m=="Fire" or m=="Invoke") then
-                    if typeof(self)=="Instance" and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")
-                        or self:IsA("UnreliableRemoteEvent") or self:IsA("BindableEvent")) then
-                        local a = table.pack(...)
-                        local o = {}
-                        for i=1,a.n do o[i] = ser(a[i]) end
-                        table.insert(spyQ, {n=self:GetFullName(), m=m, a=table.concat(o,", ")})
-                        if #spyQ > 100 then table.remove(spyQ, 1) end
-                    end
+    local spyHook = nil
+    local function spyInstall()
+        if spyHook or not has("hookmetamethod") then return end
+        local old
+        old = hookmetamethod(game, "__namecall", function(self, ...)
+            local m = getnamecallmethod()
+            if not checkcaller() and (m=="FireServer" or m=="InvokeServer" or m=="Fire" or m=="Invoke") then
+                if typeof(self)=="Instance" and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")
+                    or self:IsA("UnreliableRemoteEvent") or self:IsA("BindableEvent")) then
+                    local a = table.pack(...)
+                    local o = {}
+                    for i=1,a.n do o[i] = ser(a[i]) end
+                    table.insert(spyQ, {n=self:GetFullName(), m=m, a=table.concat(o,", ")})
+                    if #spyQ > 100 then table.remove(spyQ, 1) end
                 end
-                return old(self, ...)
-            end)
-            table.insert(MM.Restore, function() pcall(hookmetamethod, game, "__namecall", old) end)
+            end
+            return old(self, ...)
         end)
+        spyHook = function() pcall(hookmetamethod, game, "__namecall", old) end
+        table.insert(MM.Restore, spyHook)
     end
+    local function spyRemove()
+        if spyHook then spyHook(); spyHook = nil end
+    end
+    Toggle(PE, "Espionner les remotes", false, function(on)
+        if on then spyInstall() else spyRemove() end
+    end, "remoteSpy")
     bind(RunService.Heartbeat:Connect(function()
         if #spyQ == 0 or not PE.Visible then return end
         for i = #spyQ, 1, -1 do
@@ -943,29 +983,34 @@ try("combat", function()
     Toggle(PX, "Vérif. équipe", false, function(v) aim.team = v end, "aimTeam")
     Toggle(PX, "Ligne de vue (anti-mur)", false, function(v) aim.walls = v end, "aimWalls")
 
-    Section(PX, "Silent Aim")
+    Section(PX, "Silent Aim (hook à la demande)")
     local silent = false
-    if has("hookmetamethod") then
-        try("silent aim hook", function()
-            local old
-            old = hookmetamethod(game, "__index", function(self, key)
-                if silent and not checkcaller() and typeof(self)=="Instance" and self:IsA("Mouse") then
-                    local t = aimTarget
-                    if t then
-                        if key == "Hit" then return CFrame.new(t.pos) end
-                        if key == "Target" then return t.part end
-                        if key == "UnitRay" then
-                            return Ray.new(cam().CFrame.Position, (t.pos - cam().CFrame.Position).Unit)
-                        end
+    local silentHook = nil
+    local function silentInstall()
+        if silentHook or not has("hookmetamethod") then return end
+        local old
+        old = hookmetamethod(game, "__index", function(self, key)
+            if silent and not checkcaller() and typeof(self)=="Instance" and self:IsA("Mouse") then
+                local t = aimTarget
+                if t then
+                    if key == "Hit" then return CFrame.new(t.pos) end
+                    if key == "Target" then return t.part end
+                    if key == "UnitRay" then
+                        return Ray.new(cam().CFrame.Position, (t.pos - cam().CFrame.Position).Unit)
                     end
                 end
-                return old(self, key)
-            end)
-            table.insert(MM.Restore, function() pcall(hookmetamethod, game, "__index", old) end)
+            end
+            return old(self, key)
         end)
+        silentHook = function() pcall(hookmetamethod, game, "__index", old) end
+        table.insert(MM.Restore, silentHook)
+    end
+    local function silentRemove()
+        if silentHook then silentHook(); silentHook = nil end
     end
     Toggle(PX, "Activer", false, function(v)
         silent = v
+        if v then silentInstall() else silentRemove() end
         notify("Silent Aim", v and "ON" or "OFF", 2, v and T.ok or T.warn)
     end, "silent")
 
@@ -1676,7 +1721,7 @@ if #Pages > 0 then
     TabBtns[1].TextColor3 = T.acc
     TabBtns[1].BackgroundColor3 = T.panel
 end
-setOpen(true)
+setOpen(false)
 
 if #MM.Fails > 0 then
     local box = New("TextLabel",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
@@ -1689,5 +1734,5 @@ end
 task.spawn(function()
     for _, f in ipairs(MM.Fails) do log(f, T.bad) end
     log("Menu chargé — "..#Pages.." onglets, "..#MM.Fails.." échec(s)", #MM.Fails > 0 and T.warn or T.ok)
-    notify("Delta Ultimate v2.2", "chargé · "..#Pages.." onglets", 3, T.ok)
+    notify("Delta Ultimate v2.3", "rond bleu = ouvrir · glisse pour déplacer", 4, T.ok)
 end)
